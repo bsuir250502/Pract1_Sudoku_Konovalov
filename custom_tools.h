@@ -3,8 +3,7 @@
 #include "string.h"
 typedef struct argv_ {
     char *custom_conf_location;
-    int help;
-    int output_type;
+    int output_enabled;
     char *output_file;
 } argv_t;
 typedef struct cell_ {
@@ -12,10 +11,10 @@ typedef struct cell_ {
     int poss[9];
 } cell_t;
 #ifndef C_SUDOKU_TOOLS_H
-#define C_SUDOKU_TOOLS_H
 
 int options(argv_t *, int, char **);
 int getopt_c(char *);
 int read_conf_file(cell_t **, char *);
+int write_output_file(cell_t **, char *);
 
 #endif
