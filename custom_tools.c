@@ -9,8 +9,6 @@ int read_conf_file(cell_t ** table, char *path)
     int i = 0, chk = 0;
     int cell_prop[3] = { 0, 0, 0 };
     char param;
-    i = 0;
-    chk = 0;
     conf = fopen(path, "rt");
     if (!conf) {
         printf
@@ -43,10 +41,28 @@ int read_conf_file(cell_t ** table, char *path)
     return 1;
 }
 
+int write_output_file(cell_t ** table, char *path)
+{
+    FILE *output;
+    int i, j;
+    if (fopen(path, "r")) {
+        printf("File already exists. Specify different file name.\n");
+        return 0;
+    }
+    output = fopen(path, "wt");
+    for (i = 0; i < 9; i++) {
+        for (j = 0; j < 9; j++)
+            fprintf(output, "%d ", table[i][j].num);
+        fprintf(output, "\n");
+    }
+    fclose(output);
+    return 1;
+}
+
 int options(argv_t * Arguments, int argc, char **argv)
 {
-    int no_arguments_needed = 1, i = 0, path_set = 0, len = 0;
-    char *arg;
+    int no_arguments_needed = 1, i = 0, path_set = 0;
+    char *arg = NULL;
     char *destination = NULL;
     if (argc < 2)
         printf("No arguments found. Use -h or --help.\n");
@@ -78,7 +94,7 @@ int options(argv_t * Arguments, int argc, char **argv)
             case 'o':
                 no_arguments_needed = 0;
                 destination = Arguments->output_file;
-                Arguments->output_type = 1;
+                Arguments->output_enabled = 1;
                 break;
             default:
                 printf("Unknown command -%s.\n", arg);
@@ -110,18 +126,12 @@ int options(argv_t * Arguments, int argc, char **argv)
         }
     }
     if (!path_set) {
-        i = 0;
-        len = strlen(*argv);
         strncpy(Arguments->custom_conf_location, *argv, strlen(*argv));
-        while (*(Arguments->custom_conf_location + len - i) != '/'
-               && *(Arguments->custom_conf_location + len - i) != '\\')
-            i++;
-        Arguments->custom_conf_location =
-            Arguments->custom_conf_location + len - i + 1;
-        Arguments->custom_conf_location =
+        if (!(arg = strchr(Arguments->custom_conf_location, '/'))
+            || !(arg = strchr(Arguments->custom_conf_location, '\\')))
             strncpy(Arguments->custom_conf_location, "config\0", 7);
-        Arguments->custom_conf_location =
-            Arguments->custom_conf_location - len + i - 1;
+        else
+            strncpy(arg, "/config\0", 7);
     }
     return 1;
 }
@@ -143,7 +153,19 @@ int getopt_c(char *arg)
 
 int display_usage(void)
 {
+    int i = 0;
+    char *help[3] = { "-h --help",
+        "-l --config-location <path>",
+        "-o --output <path>"
+    };
+    char *help_def[3] = { "Displays usage information",
+        "Defines config location(default is program directory)",
+        "Sets output file name and location"
+    };
+    printf("Usage: sudoku [options]\n");
+    for (i = 0; i < 3; i++)
+        printf("%-30s %s\n", help[i], help_def[i]);
     printf
-        ("Usage: sudoku [options]\n -h --help                   Displays usage information\n -l --config_location <path> Defines config location(default is program directory)\n -o --output <path>          Sets output file name and location\n");
+        ("Configuration file should be supplied in format <row number> <column number> <value>,<><><>,...,<><><>;\n");
     return 1;
 }
